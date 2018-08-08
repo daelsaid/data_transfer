@@ -1,4 +1,15 @@
 #!/bin/bash
+#author: daelsaid, 08/08/2018;
+#best fmri data organization  workflow 
+#fmri struct generation + reorientation, dicom efile, and exam dir organization
+
+
+
+function find_exams_to_organize() {
+    cd ${main_raw_dir};
+    exams_to_organize=`find ${eeg_fmri_raw_dir}/ ${fmri_raw_dir}/ ${fmri_raw_hv}/ -maxdepth 3 -name 'E?????'`
+    echo $exams_to_organize;
+}
 source ~/.bash_profile
 
 export SPM8DIR="/Applications/spm8_sge"
@@ -18,15 +29,113 @@ eeg_fmri_dir='/Volumes/Smurf-Village/Imaging/best_ptsd/data/mri/new/';
 structs='/Volumes/Smurf-Village/Imaging/best_ptsd/data/mri/new/structs';
 topup='/Volumes/Smurf-Village/Imaging/best_ptsd/data/mri/new/scripts';
 
-cd ${main_raw_dir}
+cd ${main_raw_dir};
+
+function best_struct_fslswapdim () {
+    #author: rnwright
+    nii=$1
+    for image in `ls ${nii} | sort`
+    do
+        orientation=`mri_info ${image} | grep Orientation | awk -F ' ' '{ print $3 }'`
+    	echo $orientation
+    	if [[ $orientation == *"L"* ]]
+    	then
+    		placement_L=`echo $orientation | grep -aob 'L' | grep -oE '[0-9]+'`
+    		if [ "$placement_L" -eq "0" ]
+    		then
+    			first="-x"
+    		elif [ "$placement_L" -eq "1" ]
+    		then
+    			first="-y"
+    		elif [ "$placement_L" -eq "2" ]
+    		then
+    			first="-z"
+    		fi
+    	fi
+    	if [[ $orientation == *"R"* ]]
+            then
+    		placement_R=`echo $orientation | grep -aob 'R' | grep -oE '[0-9]+'`
+                    if [ "$placement_R" -eq "0" ]
+                    then
+                            first="x"
+                    elif [ "$placement_R" -eq "1" ]
+                    then
+                            first="y"
+                    elif [ "$placement_R" -eq "2" ]
+                    then
+    			first="z"
+    		fi
+    	fi
+    	if [[ $orientation == *"A"* ]]
+            then
+    		placement_A=`echo $orientation | grep -aob 'A' | grep -oE '[0-9]+'`
+                    if [ "$placement_A" -eq "0" ]
+                    then
+                            second="x"
+                    elif [ "$placement_A" -eq "1" ]
+                    then
+                            second="y"
+                    elif [ "$placement_R" -eq "2" ]
+                    then
+                            second="z"
+    		fi
+    	fi
+    	if [[ $orientation == *"P"* ]]
+            then
+                    placement_P=`echo $orientation | grep -aob 'P' | grep -oE '[0-9]+'`
+                    if [ "$placement_P" -eq "0" ]
+                    then
+                            second="-x"
+                    elif [ "$placement_P" -eq "1" ]
+                    then
+                            second="-y"
+                    elif [ "$placement_P" -eq "2" ]
+                    then
+                            second="-z"
+                    fi
+    	fi
+    	if [[ $orientation == *"S"* ]]
+            then
+                    placement_S=`echo $orientation | grep -aob 'S' | grep -oE '[0-9]+'`
+                    if [ "$placement_S" -eq "0" ]
+                    then
+                            third="x"
+                    elif [ "$placement_S" -eq "1" ]
+                    then
+                            third="y"
+                    elif [ "$placement_S" -eq "2" ]
+                    then
+                            third="z"
+                    fi
+    	fi
+    	if [[ $orientation == *"I"* ]]
+            then
+                    placement_I=`echo $orientation | grep -aob 'I' | grep -oE '[0-9]+'`
+                    if [ "$placement_I" -eq "0" ]
+                    then
+                            third="-x"
+                    elif [ "$placement_I" -eq "1" ]
+                    then
+                            third="-y"
+                    elif [ "$placement_I" -eq "2"  ]
+                    then
+                            third="-z"
+                    fi
+    	fi
+        echo $first $second $third
+        filename=$(echo $image | cut -f 1 -d '.')
+        fslswapdim ${image} ${first} ${second} ${third} ${filename}_ro.nii.gz
+}
 
 function find_exams_to_organize() {
+    #author: daelsaid, 08/08/2018;
     cd ${main_raw_dir};
     exams_to_organize=`find ${eeg_fmri_raw_dir}/ ${fmri_raw_dir}/ ${fmri_raw_hv}/ -maxdepth 3 -name 'E?????'`
     echo $exams_to_organize;
 }
 
-function empty_dir(){
+function empty_dir() { 
+    #author: daelsaid, 08/08/2018;
   if [ "$(ls -A $1)" ]; then
     echo "dir_has_data"
   else
@@ -34,8 +143,9 @@ function empty_dir(){
   fi
 }
 
-#convert structurals fxn
+#convert structurals
 function best_village_dicom_nii_convert() {
+    #author: daelsaid, 08/08/2018;
     dir=$1
     for subj in `ls -d ${dir}/sag*`;
     do
@@ -48,12 +158,15 @@ function best_village_dicom_nii_convert() {
         cd $subj;
         echo ${dcm_dir}/I0001.dcm ${structs}${new_struct_id};
         mri_convert ${dcm_dir}/I0001.dcm ${structs}${new_struct_id};
+        best_struct_fslswapdim ${structs}${new_struct_id}; #reorient to RAS
         cd ${dir};
     done
 }
 
 
 function best_raw_data_orgranization() {
+    #author: daelsaid, 08/08/2018;
+
     find_exams_to_organize;
     for exam in $exams_to_organize; do
         empty_dir $exam; #checks whether exam folder has data in it, if it doesnt it deletes exam directory d/t assumption that weve already organized
@@ -88,7 +201,7 @@ function best_raw_data_orgranization() {
             cp ${subj_dir}/topup/*rest*.nii ${best_data_output_dir}/rest;
             cp ${subj_dir}/topup/*colorid.nii ${best_data_output_dir}/colorid;
         fi #copy the .nii of scans if no topup to best output dir
-    best_village_dicom_nii_convert ${subj_dir} #convert structs 
+    best_village_dicom_nii_convert ${subj_dir}
     cd ${main_raw_dir};
 done &
 }
