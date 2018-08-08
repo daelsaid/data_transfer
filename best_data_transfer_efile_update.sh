@@ -4,12 +4,6 @@
 #fmri struct generation + reorientation, dicom efile, and exam dir organization
 
 
-
-function find_exams_to_organize() {
-    cd ${main_raw_dir};
-    exams_to_organize=`find ${eeg_fmri_raw_dir}/ ${fmri_raw_dir}/ ${fmri_raw_hv}/ -maxdepth 3 -name 'E?????'`
-    echo $exams_to_organize;
-}
 source ~/.bash_profile
 
 export SPM8DIR="/Applications/spm8_sge"
@@ -30,6 +24,31 @@ structs='/Volumes/Smurf-Village/Imaging/best_ptsd/data/mri/new/structs';
 topup='/Volumes/Smurf-Village/Imaging/best_ptsd/data/mri/new/scripts';
 
 cd ${main_raw_dir};
+
+
+
+function find_exams_to_organize() {
+    cd ${main_raw_dir};
+    exams_to_organize=`find ${eeg_fmri_raw_dir}/ ${fmri_raw_dir}/ ${fmri_raw_hv}/ -maxdepth 3 -name 'E?????'`
+    echo $exams_to_organize;
+}
+
+function find_exams_to_organize() {
+    #author: daelsaid, 08/08/2018;
+    cd ${main_raw_dir};
+    exams_to_organize=`find ${eeg_fmri_raw_dir}/ ${fmri_raw_dir}/ ${fmri_raw_hv}/ -maxdepth 3 -name 'E?????'`
+    echo $exams_to_organize;
+}
+
+function empty_dir() { 
+    #author: daelsaid, 08/08/2018;
+  if [ "$(ls -A $1)" ]; then
+    echo "dir_has_data"
+  else
+    rm -rf $1
+  fi
+}
+
 
 function best_struct_fslswapdim () {
     #author: rnwright
@@ -127,21 +146,6 @@ function best_struct_fslswapdim () {
         fslswapdim ${image} ${first} ${second} ${third} ${filename}_ro.nii.gz
 }
 
-function find_exams_to_organize() {
-    #author: daelsaid, 08/08/2018;
-    cd ${main_raw_dir};
-    exams_to_organize=`find ${eeg_fmri_raw_dir}/ ${fmri_raw_dir}/ ${fmri_raw_hv}/ -maxdepth 3 -name 'E?????'`
-    echo $exams_to_organize;
-}
-
-function empty_dir() { 
-    #author: daelsaid, 08/08/2018;
-  if [ "$(ls -A $1)" ]; then
-    echo "dir_has_data"
-  else
-    rm -rf $1
-  fi
-}
 
 #convert structurals
 function best_village_dicom_nii_convert() {
