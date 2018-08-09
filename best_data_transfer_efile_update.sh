@@ -34,12 +34,6 @@ function find_exams_to_organize() {
     echo $exams_to_organize;
 }
 
-function find_exams_to_organize() {
-    #author: daelsaid, 08/08/2018;
-    cd ${main_raw_dir};
-    exams_to_organize=`find ${eeg_fmri_raw_dir}/ ${fmri_raw_dir}/ ${fmri_raw_hv}/ -maxdepth 3 -name 'E?????'`
-    echo $exams_to_organize;
-}
 
 function empty_dir() { 
     #author: daelsaid, 08/08/2018;
