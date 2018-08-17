@@ -3,7 +3,6 @@
 #best fmri data organization  workflow 
 #fmri struct generation + reorientation, dicom efile, and exam dir organization
 
-
 source ~/.bash_profile
 
 export SPM8DIR="/Applications/spm8_sge"
@@ -25,15 +24,12 @@ topup='/Volumes/Smurf-Village/Imaging/best_ptsd/data/mri/new/scripts';
 
 cd ${main_raw_dir};
 
-
-
 function find_exams_to_organize() {
     #author: daelsaid, 08/08/2018;
     cd ${main_raw_dir};
     exams_to_organize=`find ${eeg_fmri_raw_dir}/ ${fmri_raw_dir}/ ${fmri_raw_hv}/ -maxdepth 3 -name 'E?????'`
     echo $exams_to_organize;
 }
-
 
 function empty_dir() { 
     #author: daelsaid, 08/08/2018;
@@ -43,7 +39,6 @@ function empty_dir() {
     rm -rf $1
   fi
 }
-
 
 function best_struct_fslswapdim () {
     #author: rnwright
@@ -144,20 +139,17 @@ function best_struct_fslswapdim () {
 
 #convert structurals
 function best_village_dicom_nii_convert() {
-    #author: daelsaid, 08/08/2018;
     dir=$1
     for subj in `ls -d ${dir}/sag*`;
     do
         path=$(dirname $subj)
-        subj_id=`echo $(dirname $subj) | cut -d/ -f7`
+        subj_id=`echo $(dirname $subj) | cut -d/ -f9`
         new_struct_id=${subj_id}_struct.nii.gz
-        summary_with_series_dir=`cat ${path}/summary.txt | grep 184`
+        summary_with_series_dir=`cat ${path}/*.txt | grep 184`
         dcm_dir=`echo $summary_with_series_dir | cut -d' ' -f2 | cut -d: -f1`;
-        echo $dcm_dir
         cd $subj;
-        echo ${dcm_dir}/I0001.dcm ${structs}${new_struct_id};
-        mri_convert ${dcm_dir}/I0001.dcm ${structs}${new_struct_id};
-        best_struct_fslswapdim ${structs}${new_struct_id}; #reorient to RAS
+        echo ${subj}/${dcm_dir}/I0001.dcm ${structs}/${new_struct_id};
+        mri_convert ${subj}/${dcm_dir}/I0001.dcm ${structs}/${new_struct_id};
         cd ${dir};
     done
 }
